@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rekenspel</title>
+    
+    <link rel="apple-touch-icon" href="icoon.jpeg">
+    <link rel="icon" type="image/jpeg" href="icoon.jpeg">
+    
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #701a75 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .game-container {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 20px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        
+        h1 { color: #ffffff; margin-top: 5px; margin-bottom: 20px; font-size: 24px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        
+        .memo-box {
+            background: rgba(255, 255, 255, 0.92);
+            border: 2px dashed #d946ef;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: left;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .memo-item {
+            font-size: 20px;
+            margin: 10px 0;
+            color: #1e293b;
+            font-weight: 500;
+        }
+        .memo-item strong { font-size: 28px; color: #a21caf; float: right; line-height: 24px; }
+        
+        .timer-bar {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+        .timer-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #d946ef, #ff007f);
+            width: 100%;
+            transition: width 1s linear;
+        }
+        
+        .vraag-box {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 20px 0;
+            min-height: 45px;
+            line-height: 1.4;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .hidden { display: none !important; }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 24px;
+            text-align: center;
+            border: 2px solid #cbd5e1;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            outline: none;
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            opacity: 1 !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        input[type="number"]:focus { border-color: #d946ef; }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #701a75 0%, #a21caf 100%) !important;
+            color: white !important;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            opacity: 1 !important;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+        }
+        button:hover { opacity: 0.9 !important; }
+        
+        .scoreboard {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(255, 255, 255, 0.92);
+            padding: 12px;
+            border-radius: 12px;
+            margin-top: 25px;
+            font-weight: bold;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .score-val { color: #a21caf; font-size: 18px; display: block; margin-top: 2px; }
+        
+        .feedback {
+            min-height: 48px;
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+        .correct { color: #10b981; }
+        .waarschuwing { color: #fba31c; }
+        .fout { color: #f87171; }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <h1>🔢 Rekenspel</h1>
+    
+    <div id="memoScherm" class="memo-box">
+        <div style="text-align: center; font-weight: bold; color: #701a75; margin-bottom: 10px; font-size: 14px;">Onthoud deze getallen (20s):</div>
+        <div class="memo-item">Startgetal: <strong id="lblStart">...</strong></div>
+        <div class="memo-item">Min-getal: <strong id="lblMin">...</strong></div>
+        <div class="memo-item">Plus-getal: <strong id="lblPlus">...</strong></div>
+        <div class="timer-bar"><div id="timerBalk" class="timer-fill"></div></div>
+    </div>
+    
+    <div id="speelScherm" class="hidden">
+        <div class="vraag-box" id="vraagTekst">...</div>
+        <input type="number" id="antwoordInput" inputmode="numeric" placeholder="Jouw antwoord">
+        <button onclick="controleerAntwoord()">Controleer</button>
+    </div>
+    
+    <div class="feedback" id="feedbackScherm"></div>
+
+    <div class="scoreboard">
+        <div>Score <span id="scoreNu" class="score-val">0</span></div>
+        <div>Topscore <span id="scoreTop" class="score-val">0</span></div>
+    </div>
+</div>
+
+<script>
+    var startGetal = 0;
+    var getalMin = 0;   
+    var getalPlus = 0;  
+    var actueelGetal = 0; 
+    var huidigeStap = 2;  
+    var correctAntwoord = 0;
+    var huidigeScore = 0;
+    var topScore = 0;
+    var foutenGemaakt = 0;
+    var countdownTimer;
+
+    function startSpel() {
+        startGetal = Math.floor(Math.random() * (120 - 80 + 1)) + 80;
+        getalMin = Math.floor(Math.random() * 9) + 1; 
+        
+        if (getalMin <= 1) {
+            getalPlus = 1;
+        } else {
+            getalPlus = Math.floor(Math.random() * (getalMin - 1)) + 1;
+        }
+
+        actueelGetal = startGetal;
+        huidigeStap = 2; 
+        foutenGemaakt = 0;
+
+        document.getElementById('lblStart').innerText = startGetal;
+        document.getElementById('lblMin').innerText = getalMin;
+        document.getElementById('lblPlus').innerText = getalPlus;
+        
+        document.getElementById('memoScherm').classList.remove('hidden');
+        document.getElementById('speelScherm').classList.add('hidden');
+        document.getElementById('feedbackScherm').innerText = "";
+
+        startAftellen(20);
+    }
+
+    function startAftellen(seconden) {
+        var resterend = seconden;
+        var balk = document.getElementById('timerBalk');
+        balk.style.width = '100%';
+        
+        clearInterval(countdownTimer);
+        countdownTimer = setInterval(function() {
+            resterend--;
+            balk.style.width = (resterend / seconden) * 100 + '%';
+            
+            if (resterend <= 0) {
+                clearInterval(countdownTimer);
+                verbergGetallenEnStartVragen();
+            }
+        }, 1000);
+    }
+
+    function verbergGetallenEnStartVragen() {
+        document.getElementById('memoScherm').classList.add('hidden');
+        document.getElementById('speelScherm').classList.remove('hidden');
+        bepaalNieuweSom();
+    }
+
+    function bepaalNieuweSom() {
+        var vraagElement = document.getElementById('vraagTekst');
+        
+        if (huidigeStap === 2) {
+            correctAntwoord = actueelGetal - getalMin;
+            if (actueelGetal === startGetal) {
+                vraagElement.innerText = "Trek het min-getal af van het startgetal.";
+            } else {
+                vraagElement.innerText = "Trek het min-getal af van je vorige uitkomst.";
+            }
+        } else {
+            correctAntwoord = actueelGetal + getalPlus;
+            vraagElement.innerText = "Tel het plus-getal op bij je vorige uitkomst.";
+        }
+        
+        var inputVeld = document.getElementById('antwoordInput');
+        inputVeld.value = '';
+        inputVeld.disabled = false;
+        inputVeld.focus();
+    }
+
+    function wisselRonde() {
+        actueelGetal = correctAntwoord; 
+        foutenGemaakt = 0; 
+        huidigeStap = (huidigeStap === 2) ? 3 : 2; 
+        bepaalNieuweSom();
+    }
+
+    function controleerAntwoord() {
+        var inputVeld = document.getElementById('antwoordInput');
+        var feedback = document.getElementById('feedbackScherm');
+        var spelerAntwoord = parseInt(inputVeld.value);
+
+        if (isNaN(spelerAntwoord)) {
+            feedback.innerText = "Vul eerst een getal in!";
+            feedback.className = "feedback waarschuwing";
+            return;
+        }
+
+        if (spelerAntwoord === correctAntwoord) {
+            feedback.innerText = "Goed zo! 🎉";
+            feedback.className = "feedback correct";
+            
+            huidigeScore++;
+            document.getElementById('scoreNu').innerText = huidigeScore;
+            
+            if (huidigeScore > topScore) {
+                topScore = huidigeScore;
+                document.getElementById('scoreTop').innerText = topScore;
+            }
+
+            inputVeld.disabled = true;
+            setTimeout(function() {
+                feedback.innerText = "";
+                wisselRonde();
+            }, 1200);
+
+        } else {
+            foutenGemaakt++;
+            huidigeScore = 0; 
+            document.getElementById('scoreNu').innerText = huidigeScore;
+
+            if (foutenGemaakt === 1) {
+                feedback.innerText = "Helaas, dat klopt niet. Probeer het nog één keer!";
+                feedback.className = "feedback waarschuwing";
+                inputVeld.select();
+            } else {
