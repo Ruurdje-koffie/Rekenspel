@@ -179,13 +179,14 @@
 
     function startSpel() {
         startGetal = Math.floor(Math.random() * (120 - 80 + 1)) + 80;
-        getalMin = Math.floor(Math.random() * 9) + 1;
 
-        if (getalMin <= 1) {
-            getalPlus = 1;
-        } else {
-            getalPlus = Math.floor(Math.random() * (getalMin - 1)) + 1;
-        }
+        // Min-getal: altijd tussen 2 en 9 (nooit 0)
+        getalMin = Math.floor(Math.random() * 8) + 2;
+
+        // Plus-getal: altijd tussen 1 en 9 (nooit 0), en nooit gelijk aan getalMin
+        do {
+            getalPlus = Math.floor(Math.random() * 9) + 1;
+        } while (getalPlus === getalMin);
 
         actueelGetal = startGetal;
         huidigeStap = 2;
